@@ -1,0 +1,12 @@
+# IDE
+.idea/
+*.iml
+
+# Rust
+backend/target/
+
+# Environment
+.env
+
+# macOS
+.DS_Store
