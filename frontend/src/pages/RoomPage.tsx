@@ -8,7 +8,6 @@ import { ProposalList } from '../components/proposals/ProposalList';
 import { ProposalForm } from '../components/proposals/ProposalForm';
 import { CommentThread } from '../components/discussion/CommentThread';
 import { ScoreMatrix } from '../components/scoring/ScoreMatrix';
-import { DimensionConfig } from '../components/scoring/DimensionConfig';
 import { DecisionBanner } from '../components/decision/DecisionBanner';
 import { PresenceBar } from '../components/presence/PresenceBar';
 import { WebSocketProvider } from '../contexts/WebSocketContext';
@@ -78,11 +77,10 @@ export function RoomPage() {
               <PresenceBar users={users} connected={connected} />
 
               <div className="space-y-6">
-                <DimensionConfig roomId={room.id} />
                 <ProposalForm roomId={room.id} onCreated={handleProposalCreated} />
                 <ProposalList proposals={proposals} />
                 <CommentThread roomId={room.id} canComment={true} />
-                <ScoreMatrix roomId={room.id} readOnly={false} />
+                <ScoreMatrix roomId={room.id} workspaceId={workspaceId!} readOnly={false} />
                 <DecisionBanner
                   room={room}
                   proposals={proposals}

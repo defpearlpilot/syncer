@@ -24,17 +24,17 @@ pub async fn upsert_score(
     .ok_or(AppError::NotFound("Proposal not found".into()))?;
 
     // Verify access
-    room_service::get_room(db, proposal.room_id, user_id).await?;
+    let room_with_stages = room_service::get_room(db, proposal.room_id, user_id).await?;
 
-    // Verify dimension belongs to this room
+    // Verify dimension belongs to this workspace
     let dim = sqlx::query_as::<Db, ScoringDimension>(
-        "SELECT * FROM scoring_dimensions WHERE id = $1 AND room_id = $2",
+        "SELECT * FROM scoring_dimensions WHERE id = $1 AND workspace_id = $2",
     )
     .bind(input.dimension_id)
-    .bind(proposal.room_id)
+    .bind(room_with_stages.room.workspace_id)
     .fetch_optional(db)
     .await?
-    .ok_or(AppError::NotFound("Dimension not found in this room".into()))?;
+    .ok_or(AppError::NotFound("Dimension not found in this workspace".into()))?;
 
     // Validate value is within scale range
     validate_score_value(&dim, input.value)?;
@@ -115,7 +115,7 @@ pub async fn get_score_summary(
     room_id: Uuid,
     user_id: Uuid,
 ) -> Result<Vec<ScoreSummary>, AppError> {
-    room_service::get_room(db, room_id, user_id).await?;
+    let room_with_stages = room_service::get_room(db, room_id, user_id).await?;
 
     let proposals = sqlx::query_as::<Db, Proposal>(
         "SELECT * FROM proposals WHERE room_id = $1 ORDER BY created_at",
@@ -125,9 +125,9 @@ pub async fn get_score_summary(
     .await?;
 
     let dimensions = sqlx::query_as::<Db, ScoringDimension>(
-        "SELECT * FROM scoring_dimensions WHERE room_id = $1 ORDER BY position",
+        "SELECT * FROM scoring_dimensions WHERE workspace_id = $1 ORDER BY position",
     )
-    .bind(room_id)
+    .bind(room_with_stages.room.workspace_id)
     .fetch_all(db)
     .await?;
 

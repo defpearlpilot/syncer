@@ -7,6 +7,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
 import { WorkspaceDetailPage } from './pages/WorkspaceDetailPage';
 import { RoomPage } from './pages/RoomPage';
+import { WorkspaceDimensionsPage } from './pages/WorkspaceDimensionsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/workspaces" element={<ProtectedRoute><WorkspacesPage /></ProtectedRoute>} />
       <Route path="/workspaces/:id" element={<ProtectedRoute><WorkspaceDetailPage /></ProtectedRoute>} />
+      <Route path="/workspaces/:id/dimensions" element={<ProtectedRoute><WorkspaceDimensionsPage /></ProtectedRoute>} />
       <Route path="/workspaces/:id/rooms/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/workspaces" replace />} />
     </Routes>

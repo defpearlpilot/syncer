@@ -67,7 +67,7 @@ export interface DecisionRoomWithStages extends DecisionRoom {
 
 export interface ScoringDimension {
   id: string;
-  room_id: string;
+  workspace_id: string;
   name: string;
   scale_type: 'numeric_range' | 't_shirt' | 'custom_labels';
   scale_config: any;

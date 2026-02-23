@@ -5,7 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct ScoringDimension {
     pub id: Uuid,
-    pub room_id: Uuid,
+    pub workspace_id: Uuid,
     pub name: String,
     pub scale_type: String,
     pub scale_config: serde_json::Value,

@@ -1,20 +1,20 @@
 import { apiFetch } from './client';
 import { ScoringDimension } from '../types';
 
-export function createDimension(roomId: string, data: {
+export function createDimension(workspaceId: string, data: {
   name: string;
   scale_type: string;
   scale_config: any;
   weight?: number;
 }) {
-  return apiFetch<ScoringDimension>(`/api/rooms/${roomId}/dimensions`, {
+  return apiFetch<ScoringDimension>(`/api/workspaces/${workspaceId}/dimensions`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
-export function listDimensions(roomId: string) {
-  return apiFetch<ScoringDimension[]>(`/api/rooms/${roomId}/dimensions`);
+export function listDimensions(workspaceId: string) {
+  return apiFetch<ScoringDimension[]>(`/api/workspaces/${workspaceId}/dimensions`);
 }
 
 export function updateDimension(dimensionId: string, data: {

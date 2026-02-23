@@ -3,18 +3,18 @@ use uuid::Uuid;
 
 use crate::error::AppError;
 use crate::models::dimension::{CreateDimensionInput, ScoringDimension, UpdateDimensionInput};
-use crate::services::room_service;
+use crate::services::workspace_service;
 
 type Db = sqlx::Postgres;
 
 pub async fn create_dimension(
     db: &PgPool,
-    room_id: Uuid,
+    workspace_id: Uuid,
     user_id: Uuid,
     input: CreateDimensionInput,
 ) -> Result<ScoringDimension, AppError> {
     // Verify access
-    room_service::get_room(db, room_id, user_id).await?;
+    workspace_service::get_workspace(db, workspace_id, user_id).await?;
 
     if input.name.is_empty() {
         return Err(AppError::BadRequest("Name is required".into()));
@@ -29,19 +29,19 @@ pub async fn create_dimension(
 
     // Get next position
     let max_pos = sqlx::query_scalar::<Db, Option<i32>>(
-        "SELECT MAX(position) FROM scoring_dimensions WHERE room_id = $1",
+        "SELECT MAX(position) FROM scoring_dimensions WHERE workspace_id = $1",
     )
-    .bind(room_id)
+    .bind(workspace_id)
     .fetch_one(db)
     .await?;
 
     let position = max_pos.map(|p| p + 1).unwrap_or(0);
 
     let dimension = sqlx::query_as::<Db, ScoringDimension>(
-        "INSERT INTO scoring_dimensions (room_id, name, scale_type, scale_config, weight, position)
+        "INSERT INTO scoring_dimensions (workspace_id, name, scale_type, scale_config, weight, position)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
     )
-    .bind(room_id)
+    .bind(workspace_id)
     .bind(&input.name)
     .bind(&input.scale_type)
     .bind(&input.scale_config)
@@ -55,15 +55,15 @@ pub async fn create_dimension(
 
 pub async fn list_dimensions(
     db: &PgPool,
-    room_id: Uuid,
+    workspace_id: Uuid,
     user_id: Uuid,
 ) -> Result<Vec<ScoringDimension>, AppError> {
-    room_service::get_room(db, room_id, user_id).await?;
+    workspace_service::get_workspace(db, workspace_id, user_id).await?;
 
     let dimensions = sqlx::query_as::<Db, ScoringDimension>(
-        "SELECT * FROM scoring_dimensions WHERE room_id = $1 ORDER BY position",
+        "SELECT * FROM scoring_dimensions WHERE workspace_id = $1 ORDER BY position",
     )
-    .bind(room_id)
+    .bind(workspace_id)
     .fetch_all(db)
     .await?;
 
@@ -85,7 +85,7 @@ pub async fn update_dimension(
     .ok_or(AppError::NotFound("Dimension not found".into()))?;
 
     // Verify access
-    room_service::get_room(db, dim.room_id, user_id).await?;
+    workspace_service::get_workspace(db, dim.workspace_id, user_id).await?;
 
     let name = input.name.unwrap_or(dim.name);
     let scale_type = input.scale_type.unwrap_or(dim.scale_type);
@@ -120,7 +120,7 @@ pub async fn delete_dimension(
     .await?
     .ok_or(AppError::NotFound("Dimension not found".into()))?;
 
-    room_service::get_room(db, dim.room_id, user_id).await?;
+    workspace_service::get_workspace(db, dim.workspace_id, user_id).await?;
 
     sqlx::query("DELETE FROM scoring_dimensions WHERE id = $1")
         .bind(dimension_id)

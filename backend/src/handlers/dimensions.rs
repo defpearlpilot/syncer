@@ -12,19 +12,19 @@ use crate::AppState;
 pub async fn create_dimension(
     State(state): State<AppState>,
     auth: AuthUser,
-    Path(room_id): Path<Uuid>,
+    Path(workspace_id): Path<Uuid>,
     Json(input): Json<CreateDimensionInput>,
 ) -> Result<Json<ScoringDimension>, AppError> {
-    let dim = dimension_service::create_dimension(&state.db, room_id, auth.user_id, input).await?;
+    let dim = dimension_service::create_dimension(&state.db, workspace_id, auth.user_id, input).await?;
     Ok(Json(dim))
 }
 
 pub async fn list_dimensions(
     State(state): State<AppState>,
     auth: AuthUser,
-    Path(room_id): Path<Uuid>,
+    Path(workspace_id): Path<Uuid>,
 ) -> Result<Json<Vec<ScoringDimension>>, AppError> {
-    let dims = dimension_service::list_dimensions(&state.db, room_id, auth.user_id).await?;
+    let dims = dimension_service::list_dimensions(&state.db, workspace_id, auth.user_id).await?;
     Ok(Json(dims))
 }
 

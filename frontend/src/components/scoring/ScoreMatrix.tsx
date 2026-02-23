@@ -6,10 +6,11 @@ import * as dimensionsApi from '../../api/dimensions';
 
 interface Props {
   roomId: string;
+  workspaceId: string;
   readOnly?: boolean;
 }
 
-export function ScoreMatrix({ roomId, readOnly }: Props) {
+export function ScoreMatrix({ roomId, workspaceId, readOnly }: Props) {
   const [summary, setSummary] = useState<ScoreSummary[]>([]);
   const [dimensions, setDimensions] = useState<ScoringDimension[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export function ScoreMatrix({ roomId, readOnly }: Props) {
     try {
       const [s, d] = await Promise.all([
         scoresApi.getScoreSummary(roomId),
-        dimensionsApi.listDimensions(roomId),
+        dimensionsApi.listDimensions(workspaceId),
       ]);
       setSummary(s);
       setDimensions(d);
@@ -26,7 +27,7 @@ export function ScoreMatrix({ roomId, readOnly }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, workspaceId]);
 
   useEffect(() => {
     loadData();

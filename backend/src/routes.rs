@@ -17,6 +17,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/", post(workspaces::create_workspace).get(workspaces::list_workspaces))
         .route("/{id}", get(workspaces::get_workspace))
         .route("/{id}/invite", post(workspaces::invite_member))
+        .route("/{id}/dimensions", post(dimensions::create_dimension).get(dimensions::list_dimensions))
         .route("/{wid}/rooms", post(rooms::create_room).get(rooms::list_rooms));
 
     let room_routes = Router::new()
@@ -24,7 +25,6 @@ pub fn build_router(state: AppState) -> Router {
         .route("/{id}/transition", post(rooms::transition_stage))
         .route("/{id}/decide", post(rooms::decide))
         .route("/{id}/stages", get(rooms::get_stages).put(rooms::replace_stages))
-        .route("/{id}/dimensions", post(dimensions::create_dimension).get(dimensions::list_dimensions))
         .route("/{rid}/proposals", post(proposals::create_proposal).get(proposals::list_proposals))
         .route("/{rid}/comments", post(comments::create_comment).get(comments::list_comments))
         .route("/{rid}/scores/summary", get(scores::get_score_summary));
