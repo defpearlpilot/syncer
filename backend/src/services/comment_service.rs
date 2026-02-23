@@ -26,14 +26,8 @@ pub async fn create_comment(
     user_id: Uuid,
     input: CreateCommentInput,
 ) -> Result<Comment, AppError> {
-    let room = room_service::get_room(db, room_id, user_id).await?;
-    let stage_type = room_service::get_current_stage_type(&room);
-
-    if stage_type != "discuss" && stage_type != "open" {
-        return Err(AppError::BadRequest(
-            "Comments can only be added during the discuss stage".into(),
-        ));
-    }
+    // Verify access
+    room_service::get_room(db, room_id, user_id).await?;
 
     if input.body.is_empty() {
         return Err(AppError::BadRequest("Comment body is required".into()));

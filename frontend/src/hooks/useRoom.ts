@@ -15,8 +15,7 @@ type RoomAction =
   | { type: 'SET_PROPOSALS'; proposals: Proposal[] }
   | { type: 'ADD_PROPOSAL'; proposal: Proposal }
   | { type: 'UPDATE_PROPOSAL'; proposal: Proposal }
-  | { type: 'SET_SCORES'; scores: ScoreSummary[] }
-  | { type: 'STAGE_CHANGED'; room: DecisionRoomWithStages };
+  | { type: 'SET_SCORES'; scores: ScoreSummary[] };
 
 function roomReducer(state: RoomState, action: RoomAction): RoomState {
   switch (action.type) {
@@ -36,8 +35,6 @@ function roomReducer(state: RoomState, action: RoomAction): RoomState {
       };
     case 'SET_SCORES':
       return { ...state, scoreSummary: action.scores };
-    case 'STAGE_CHANGED':
-      return { ...state, room: action.room };
     default:
       return state;
   }
@@ -54,18 +51,14 @@ export function useRoom(roomId: string | undefined) {
   const loadRoom = useCallback(async () => {
     if (!roomId) return;
     try {
-      const [room, proposals] = await Promise.all([
+      const [room, proposals, scores] = await Promise.all([
         roomsApi.getRoom(roomId),
         proposalsApi.listProposals(roomId),
+        scoresApi.getScoreSummary(roomId),
       ]);
       dispatch({ type: 'SET_ROOM', room });
       dispatch({ type: 'SET_PROPOSALS', proposals });
-
-      const stage = room.current_stage?.stage_type;
-      if (stage === 'score' || stage === 'review' || stage === 'decide') {
-        const scores = await scoresApi.getScoreSummary(roomId);
-        dispatch({ type: 'SET_SCORES', scores });
-      }
+      dispatch({ type: 'SET_SCORES', scores });
     } catch {
     } finally {
       setLoading(false);
@@ -85,17 +78,7 @@ export function useRoom(roomId: string | undefined) {
       case 'proposal_updated':
         dispatch({ type: 'UPDATE_PROPOSAL', proposal: data.payload });
         break;
-      case 'stage_changed':
-        dispatch({ type: 'STAGE_CHANGED', room: data.payload });
-        // Reload scores when stage changes
-        if (roomId) {
-          scoresApi.getScoreSummary(roomId).then((scores) => {
-            dispatch({ type: 'SET_SCORES', scores });
-          }).catch(() => {});
-        }
-        break;
       case 'score_updated':
-        // Reload full score summary for accurate aggregates
         if (roomId) {
           scoresApi.getScoreSummary(roomId).then((scores) => {
             dispatch({ type: 'SET_SCORES', scores });
@@ -103,7 +86,6 @@ export function useRoom(roomId: string | undefined) {
         }
         break;
       case 'comment_created':
-        // Comments are managed separately by CommentThread
         break;
     }
   }, [roomId]);

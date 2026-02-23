@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { DecisionRoomWithStages, Proposal } from '../types';
+import { Proposal } from '../types';
 import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 import { RoomHeader } from '../components/room/RoomHeader';
-import { TransitionButton } from '../components/room/TransitionButton';
 import { ProposalList } from '../components/proposals/ProposalList';
 import { ProposalForm } from '../components/proposals/ProposalForm';
 import { CommentThread } from '../components/discussion/CommentThread';
@@ -32,13 +31,6 @@ export function RoomPage() {
     onMessage: onWsMessage,
     enabled: !!roomId,
   });
-
-  const stageType = room?.current_stage?.stage_type || 'open';
-
-  const handleTransition = (updated: DecisionRoomWithStages) => {
-    dispatch({ type: 'SET_ROOM', room: updated });
-    reload();
-  };
 
   const handleProposalCreated = (proposal: Proposal) => {
     dispatch({ type: 'ADD_PROPOSAL', proposal });
@@ -85,57 +77,19 @@ export function RoomPage() {
               <RoomHeader room={room} />
               <PresenceBar users={users} connected={connected} />
 
-              {/* Stage-dependent content */}
-              {stageType === 'propose' && (
-                <div className="space-y-6">
-                  <DimensionConfig roomId={room.id} />
-                  <ProposalForm roomId={room.id} onCreated={handleProposalCreated} />
-                  <ProposalList proposals={proposals} />
-                </div>
-              )}
-
-              {stageType === 'discuss' && (
-                <div className="space-y-6">
-                  <ProposalList proposals={proposals} />
-                  <CommentThread roomId={room.id} canComment={true} />
-                </div>
-              )}
-
-              {stageType === 'score' && (
-                <div className="space-y-6">
-                  <ScoreMatrix roomId={room.id} readOnly={false} />
-                </div>
-              )}
-
-              {stageType === 'review' && (
-                <div className="space-y-6">
-                  <ScoreMatrix roomId={room.id} readOnly={true} />
-                </div>
-              )}
-
-              {stageType === 'decide' && (
-                <div className="space-y-6">
-                  <ScoreMatrix roomId={room.id} readOnly={true} />
-                  <DecisionBanner
-                    room={room}
-                    proposals={proposals}
-                    scoreSummary={scoreSummary}
-                    onDecided={handleDecided}
-                  />
-                </div>
-              )}
-
-              {stageType === 'open' && (
-                <div className="space-y-6">
-                  <DimensionConfig roomId={room.id} />
-                  <ProposalForm roomId={room.id} onCreated={handleProposalCreated} />
-                  <ProposalList proposals={proposals} />
-                  <CommentThread roomId={room.id} canComment={true} />
-                  <ScoreMatrix roomId={room.id} readOnly={false} />
-                </div>
-              )}
-
-              <TransitionButton room={room} onTransition={handleTransition} />
+              <div className="space-y-6">
+                <DimensionConfig roomId={room.id} />
+                <ProposalForm roomId={room.id} onCreated={handleProposalCreated} />
+                <ProposalList proposals={proposals} />
+                <CommentThread roomId={room.id} canComment={true} />
+                <ScoreMatrix roomId={room.id} readOnly={false} />
+                <DecisionBanner
+                  room={room}
+                  proposals={proposals}
+                  scoreSummary={scoreSummary}
+                  onDecided={handleDecided}
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -41,43 +41,6 @@ pub async fn create_room(
     .fetch_one(db)
     .await?;
 
-    // Create default stages
-    let default_stages = vec![
-        ("Propose", "propose", 0),
-        ("Discuss", "discuss", 1),
-        ("Score", "score", 2),
-        ("Review", "review", 3),
-        ("Decide", "decide", 4),
-    ];
-
-    let mut stages = Vec::new();
-    for (name, stage_type, position) in &default_stages {
-        let stage = sqlx::query_as::<Db, RoomStage>(
-            "INSERT INTO room_stages (room_id, name, stage_type, position)
-             VALUES ($1, $2, $3, $4) RETURNING *",
-        )
-        .bind(room.id)
-        .bind(name)
-        .bind(stage_type)
-        .bind(position)
-        .fetch_one(db)
-        .await?;
-        stages.push(stage);
-    }
-
-    // Set current stage to the first one
-    let first_stage_id = stages[0].id;
-    sqlx::query("UPDATE decision_rooms SET current_stage_id = $1 WHERE id = $2")
-        .bind(first_stage_id)
-        .bind(room.id)
-        .execute(db)
-        .await?;
-
-    let room = sqlx::query_as::<Db, DecisionRoom>("SELECT * FROM decision_rooms WHERE id = $1")
-        .bind(room.id)
-        .fetch_one(db)
-        .await?;
-
     // Add creator as room member
     sqlx::query("INSERT INTO room_members (room_id, user_id) VALUES ($1, $2)")
         .bind(room.id)
@@ -85,12 +48,10 @@ pub async fn create_room(
         .execute(db)
         .await?;
 
-    let current_stage = stages.first().cloned();
-
     Ok(DecisionRoomWithStages {
         room,
-        stages,
-        current_stage,
+        stages: vec![],
+        current_stage: None,
     })
 }
 
@@ -287,14 +248,7 @@ pub async fn decide(
     user_id: Uuid,
     input: DecideInput,
 ) -> Result<DecisionRoom, AppError> {
-    let room = get_room(db, room_id, user_id).await?;
-
-    // Verify we're in the decide stage
-    if let Some(stage) = &room.current_stage {
-        if stage.stage_type != "decide" {
-            return Err(AppError::BadRequest("Room is not in the decide stage".into()));
-        }
-    }
+    get_room(db, room_id, user_id).await?;
 
     // Verify proposal belongs to this room
     let proposal_exists = sqlx::query_scalar::<Db, i64>(
@@ -322,9 +276,3 @@ pub async fn decide(
     Ok(updated)
 }
 
-pub fn get_current_stage_type(room: &DecisionRoomWithStages) -> &str {
-    room.current_stage
-        .as_ref()
-        .map(|s| s.stage_type.as_str())
-        .unwrap_or("open")
-}

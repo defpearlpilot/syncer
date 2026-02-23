@@ -23,14 +23,8 @@ pub async fn upsert_score(
     .await?
     .ok_or(AppError::NotFound("Proposal not found".into()))?;
 
-    let room = room_service::get_room(db, proposal.room_id, user_id).await?;
-    let stage_type = room_service::get_current_stage_type(&room);
-
-    if stage_type != "score" && stage_type != "open" {
-        return Err(AppError::BadRequest(
-            "Scoring is only allowed during the score stage".into(),
-        ));
-    }
+    // Verify access
+    room_service::get_room(db, proposal.room_id, user_id).await?;
 
     // Verify dimension belongs to this room
     let dim = sqlx::query_as::<Db, ScoringDimension>(

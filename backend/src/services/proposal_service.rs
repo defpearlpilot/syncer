@@ -13,14 +13,8 @@ pub async fn create_proposal(
     user_id: Uuid,
     input: CreateProposalInput,
 ) -> Result<Proposal, AppError> {
-    let room = room_service::get_room(db, room_id, user_id).await?;
-    let stage_type = room_service::get_current_stage_type(&room);
-
-    if stage_type != "propose" && stage_type != "open" {
-        return Err(AppError::BadRequest(
-            "Proposals can only be created during the propose stage".into(),
-        ));
-    }
+    // Verify access
+    room_service::get_room(db, room_id, user_id).await?;
 
     if input.title.is_empty() {
         return Err(AppError::BadRequest("Title is required".into()));
@@ -71,15 +65,6 @@ pub async fn update_proposal(
     .await?
     .ok_or(AppError::NotFound("Proposal not found".into()))?;
 
-    let room = room_service::get_room(db, proposal.room_id, user_id).await?;
-    let stage_type = room_service::get_current_stage_type(&room);
-
-    if stage_type != "propose" && stage_type != "open" {
-        return Err(AppError::BadRequest(
-            "Proposals can only be edited during the propose stage".into(),
-        ));
-    }
-
     if proposal.created_by != user_id {
         return Err(AppError::Forbidden("You can only edit your own proposals".into()));
     }
@@ -111,15 +96,6 @@ pub async fn delete_proposal(
     .fetch_optional(db)
     .await?
     .ok_or(AppError::NotFound("Proposal not found".into()))?;
-
-    let room = room_service::get_room(db, proposal.room_id, user_id).await?;
-    let stage_type = room_service::get_current_stage_type(&room);
-
-    if stage_type != "propose" && stage_type != "open" {
-        return Err(AppError::BadRequest(
-            "Proposals can only be deleted during the propose stage".into(),
-        ));
-    }
 
     if proposal.created_by != user_id {
         return Err(AppError::Forbidden(
