@@ -8,6 +8,7 @@ import { WorkspacesPage } from './pages/WorkspacesPage';
 import { WorkspaceDetailPage } from './pages/WorkspaceDetailPage';
 import { RoomPage } from './pages/RoomPage';
 import { WorkspaceDimensionsPage } from './pages/WorkspaceDimensionsPage';
+import { ProposalPage } from './pages/ProposalPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/workspaces/:id" element={<ProtectedRoute><WorkspaceDetailPage /></ProtectedRoute>} />
       <Route path="/workspaces/:id/dimensions" element={<ProtectedRoute><WorkspaceDimensionsPage /></ProtectedRoute>} />
       <Route path="/workspaces/:id/rooms/:roomId" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
+      <Route path="/workspaces/:id/rooms/:roomId/proposals/:proposalId" element={<ProtectedRoute><ProposalPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/workspaces" replace />} />
     </Routes>
   );

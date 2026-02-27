@@ -42,3 +42,8 @@ npm run build                 # Production build
 - Frontend proxies API calls to backend via `"proxy": "http://localhost:3100"` in package.json
 - SQLx is configured for compile-time query checking against PostgreSQL
 - Backend uses `dotenvy` for environment variable loading
+
+## Code Guidelines
+
+### Backend (Rust)
+- **Maximum 20 lines per function/method.** If a function exceeds 20 lines, extract logic into smaller helper functions.

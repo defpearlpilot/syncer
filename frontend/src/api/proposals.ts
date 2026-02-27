@@ -1,6 +1,10 @@
 import { apiFetch } from './client';
 import { Proposal } from '../types';
 
+export function getProposal(proposalId: string) {
+  return apiFetch<Proposal>(`/api/proposals/${proposalId}`);
+}
+
 export function createProposal(roomId: string, title: string, body?: string) {
   return apiFetch<Proposal>(`/api/rooms/${roomId}/proposals`, {
     method: 'POST',

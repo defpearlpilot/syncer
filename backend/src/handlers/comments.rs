@@ -28,6 +28,15 @@ pub async fn list_comments(
     Ok(Json(comments))
 }
 
+pub async fn list_proposal_comments(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(proposal_id): Path<Uuid>,
+) -> Result<Json<Vec<CommentWithAuthor>>, AppError> {
+    let comments = comment_service::list_proposal_comments(&state.db, proposal_id, auth.user_id).await?;
+    Ok(Json(comments))
+}
+
 pub async fn update_comment(
     State(state): State<AppState>,
     auth: AuthUser,

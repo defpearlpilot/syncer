@@ -6,6 +6,10 @@ interface CommentWithAuthor extends Comment {
   replies: CommentWithAuthor[];
 }
 
+export function listProposalComments(proposalId: string) {
+  return apiFetch<CommentWithAuthor[]>(`/api/proposals/${proposalId}/comments`);
+}
+
 export function createComment(roomId: string, body: string, proposalId?: string, parentId?: string) {
   return apiFetch<Comment>(`/api/rooms/${roomId}/comments`, {
     method: 'POST',

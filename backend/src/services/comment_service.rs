@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use crate::error::AppError;
 use crate::models::comment::{Comment, CommentWithAuthor, CreateCommentInput, UpdateCommentInput};
+use crate::models::proposal::Proposal;
 use crate::services::room_service;
 
 type Db = sqlx::Postgres;
@@ -82,9 +83,11 @@ pub async fn list_comments(
     .fetch_all(db)
     .await?;
 
-    // Build threaded structure
-    let all_comments: Vec<CommentWithAuthor> = rows
-        .iter()
+    Ok(build_threaded_comments(rows))
+}
+
+fn rows_to_comments(rows: &[CommentRow]) -> Vec<CommentWithAuthor> {
+    rows.iter()
         .map(|r| CommentWithAuthor {
             comment: Comment {
                 id: r.id,
@@ -99,9 +102,11 @@ pub async fn list_comments(
             author_name: r.author_name.clone(),
             replies: vec![],
         })
-        .collect();
+        .collect()
+}
 
-    // Separate top-level and replies
+fn build_threaded_comments(rows: Vec<CommentRow>) -> Vec<CommentWithAuthor> {
+    let all_comments = rows_to_comments(&rows);
     let mut top_level: Vec<CommentWithAuthor> = Vec::new();
     let mut replies: Vec<CommentWithAuthor> = Vec::new();
 
@@ -113,17 +118,49 @@ pub async fn list_comments(
         }
     }
 
-    // Attach replies to parents
+    attach_replies(&mut top_level, replies);
+    top_level
+}
+
+fn attach_replies(parents: &mut [CommentWithAuthor], replies: Vec<CommentWithAuthor>) {
     for reply in replies {
-        if let Some(parent) = top_level
+        if let Some(parent) = parents
             .iter_mut()
             .find(|p| Some(p.comment.id) == reply.comment.parent_id)
         {
             parent.replies.push(reply);
         }
     }
+}
 
-    Ok(top_level)
+pub async fn list_proposal_comments(
+    db: &PgPool,
+    proposal_id: Uuid,
+    user_id: Uuid,
+) -> Result<Vec<CommentWithAuthor>, AppError> {
+    let proposal = sqlx::query_as::<Db, Proposal>(
+        "SELECT * FROM proposals WHERE id = $1",
+    )
+    .bind(proposal_id)
+    .fetch_optional(db)
+    .await?
+    .ok_or(AppError::NotFound("Proposal not found".into()))?;
+
+    room_service::get_room(db, proposal.room_id, user_id).await?;
+
+    let rows = sqlx::query_as::<Db, CommentRow>(
+        "SELECT c.*, u.display_name as author_name
+         FROM comments c
+         INNER JOIN users u ON u.id = c.created_by
+         WHERE c.room_id = $1 AND c.proposal_id = $2
+         ORDER BY c.created_at",
+    )
+    .bind(proposal.room_id)
+    .bind(proposal_id)
+    .fetch_all(db)
+    .await?;
+
+    Ok(build_threaded_comments(rows))
 }
 
 pub async fn update_comment(

@@ -6,9 +6,10 @@ interface Props {
   proposals: Proposal[];
   selectedId?: string;
   onSelect?: (proposal: Proposal) => void;
+  linkBase?: string;
 }
 
-export function ProposalList({ proposals, selectedId, onSelect }: Props) {
+export function ProposalList({ proposals, selectedId, onSelect, linkBase }: Props) {
   if (proposals.length === 0) {
     return (
       <div className="text-center py-8 text-gray-400 text-sm">
@@ -25,6 +26,7 @@ export function ProposalList({ proposals, selectedId, onSelect }: Props) {
           proposal={p}
           selected={p.id === selectedId}
           onClick={onSelect ? () => onSelect(p) : undefined}
+          linkTo={linkBase ? `${linkBase}/${p.id}` : undefined}
         />
       ))}
     </div>

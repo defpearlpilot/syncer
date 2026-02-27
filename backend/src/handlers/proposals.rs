@@ -9,6 +9,15 @@ use crate::models::proposal::{CreateProposalInput, Proposal, UpdateProposalInput
 use crate::services::proposal_service;
 use crate::AppState;
 
+pub async fn get_proposal(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(proposal_id): Path<Uuid>,
+) -> Result<Json<Proposal>, AppError> {
+    let proposal = proposal_service::get_proposal(&state.db, proposal_id, auth.user_id).await?;
+    Ok(Json(proposal))
+}
+
 pub async fn create_proposal(
     State(state): State<AppState>,
     auth: AuthUser,

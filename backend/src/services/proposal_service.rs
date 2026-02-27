@@ -7,6 +7,23 @@ use crate::services::room_service;
 
 type Db = sqlx::Postgres;
 
+pub async fn get_proposal(
+    db: &PgPool,
+    proposal_id: Uuid,
+    user_id: Uuid,
+) -> Result<Proposal, AppError> {
+    let proposal = sqlx::query_as::<Db, Proposal>(
+        "SELECT * FROM proposals WHERE id = $1",
+    )
+    .bind(proposal_id)
+    .fetch_optional(db)
+    .await?
+    .ok_or(AppError::NotFound("Proposal not found".into()))?;
+
+    room_service::get_room(db, proposal.room_id, user_id).await?;
+    Ok(proposal)
+}
+
 pub async fn create_proposal(
     db: &PgPool,
     room_id: Uuid,

@@ -30,8 +30,9 @@ pub fn build_router(state: AppState) -> Router {
         .route("/{rid}/scores/summary", get(scores::get_score_summary));
 
     let proposal_routes = Router::new()
-        .route("/{id}", patch(proposals::update_proposal).delete(proposals::delete_proposal))
-        .route("/{pid}/scores", put(scores::upsert_score));
+        .route("/{id}", get(proposals::get_proposal).patch(proposals::update_proposal).delete(proposals::delete_proposal))
+        .route("/{pid}/scores", put(scores::upsert_score))
+        .route("/{pid}/comments", get(comments::list_proposal_comments));
 
     let comment_routes = Router::new()
         .route("/{id}", patch(comments::update_comment).delete(comments::delete_comment));
