@@ -22,12 +22,14 @@ export function WorkspaceDimensionsPage() {
 
   useEffect(() => {
     if (!workspaceId) return;
-    Promise.all([
+    Promise.allSettled([
       workspacesApi.getWorkspace(workspaceId),
       dimensionsApi.listDimensions(workspaceId),
     ])
-      .then(([ws, dims]) => { setWorkspace(ws); setDimensions(dims); })
-      .catch(() => {})
+      .then(([ws, dims]) => {
+        if (ws.status === 'fulfilled') setWorkspace(ws.value);
+        if (dims.status === 'fulfilled') setDimensions(dims.value);
+      })
       .finally(() => setLoading(false));
   }, [workspaceId]);
 

@@ -51,15 +51,14 @@ export function useRoom(roomId: string | undefined) {
   const loadRoom = useCallback(async () => {
     if (!roomId) return;
     try {
-      const [room, proposals, scores] = await Promise.all([
+      const [room, proposals, scores] = await Promise.allSettled([
         roomsApi.getRoom(roomId),
         proposalsApi.listProposals(roomId),
         scoresApi.getScoreSummary(roomId),
       ]);
-      dispatch({ type: 'SET_ROOM', room });
-      dispatch({ type: 'SET_PROPOSALS', proposals });
-      dispatch({ type: 'SET_SCORES', scores });
-    } catch {
+      if (room.status === 'fulfilled') dispatch({ type: 'SET_ROOM', room: room.value });
+      if (proposals.status === 'fulfilled') dispatch({ type: 'SET_PROPOSALS', proposals: proposals.value });
+      if (scores.status === 'fulfilled') dispatch({ type: 'SET_SCORES', scores: scores.value });
     } finally {
       setLoading(false);
     }

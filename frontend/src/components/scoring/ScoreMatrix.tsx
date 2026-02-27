@@ -17,13 +17,12 @@ export function ScoreMatrix({ roomId, workspaceId, readOnly }: Props) {
 
   const loadData = useCallback(async () => {
     try {
-      const [s, d] = await Promise.all([
+      const [s, d] = await Promise.allSettled([
         scoresApi.getScoreSummary(roomId),
         dimensionsApi.listDimensions(workspaceId),
       ]);
-      setSummary(s);
-      setDimensions(d);
-    } catch {
+      if (s.status === 'fulfilled') setSummary(s.value);
+      if (d.status === 'fulfilled') setDimensions(d.value);
     } finally {
       setLoading(false);
     }
