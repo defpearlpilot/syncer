@@ -64,6 +64,37 @@ export function WorkspaceDimensionsPage() {
     }
   };
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editWeight, setEditWeight] = useState(1.0);
+  const [saving, setSaving] = useState(false);
+
+  const startEditing = (dim: ScoringDimension) => {
+    setEditingId(dim.id);
+    setEditName(dim.name);
+    setEditWeight(dim.weight);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    setSaving(true);
+    try {
+      const updated = await dimensionsApi.updateDimension(id, {
+        name: editName,
+        weight: editWeight,
+      });
+      setDimensions((prev) => prev.map((d) => (d.id === id ? updated : d)));
+      setEditingId(null);
+    } catch (err: any) {
+      alert(err.message || 'Failed to update dimension');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     try {
       await dimensionsApi.deleteDimension(id);
@@ -189,19 +220,58 @@ export function WorkspaceDimensionsPage() {
             {dimensions.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
                 {dimensions.map((dim) => (
-                  <div key={dim.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">{dim.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">
-                        {dim.scale_type} &middot; {dim.weight}x
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(dim.id)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
+                  <div key={dim.id} className="px-4 py-3">
+                    {editingId === dim.id ? (
+                      <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(dim.id); }} className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                          required
+                        />
+                        <div className="flex items-center gap-1">
+                          <label className="text-xs text-gray-500">Weight:</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={editWeight}
+                            onChange={(e) => setEditWeight(Number(e.target.value))}
+                            className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm"
+                          />
+                        </div>
+                        <button type="submit" disabled={saving} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                          {saving ? 'Saving...' : 'Save'}
+                        </button>
+                        <button type="button" onClick={cancelEditing} className="text-xs text-gray-500 hover:text-gray-700">
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">{dim.name}</span>
+                          <span className="text-xs text-gray-400 ml-2">
+                            {dim.scale_type} &middot; {dim.weight}x
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => startEditing(dim)}
+                            className="text-xs text-indigo-600 hover:text-indigo-800"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(dim.id)}
+                            className="text-xs text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

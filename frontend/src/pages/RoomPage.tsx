@@ -6,7 +6,6 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { RoomHeader } from '../components/room/RoomHeader';
 import { ProposalList } from '../components/proposals/ProposalList';
 import { ProposalForm } from '../components/proposals/ProposalForm';
-import { ScoreMatrix } from '../components/scoring/ScoreMatrix';
 import { DecisionBanner } from '../components/decision/DecisionBanner';
 import { PresenceBar } from '../components/presence/PresenceBar';
 import { WebSocketProvider } from '../contexts/WebSocketContext';
@@ -78,7 +77,6 @@ export function RoomPage() {
               <div className="space-y-6">
                 <ProposalForm roomId={room.id} onCreated={handleProposalCreated} />
                 <ProposalList proposals={proposals} linkBase={`/workspaces/${workspaceId}/rooms/${roomId}/proposals`} />
-                <ScoreMatrix roomId={room.id} workspaceId={workspaceId!} readOnly={false} />
                 <DecisionBanner
                   room={room}
                   proposals={proposals}
